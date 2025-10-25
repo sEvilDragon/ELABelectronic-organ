@@ -241,6 +241,9 @@ void led_animation_task(void *pvParameters)
             uint16_t r = (final_r[i] < 25) ? (uint16_t)(25 * set_led) : final_r[i];
             uint16_t g = (final_g[i] < 25) ? (uint16_t)(25 * set_led) : final_g[i];
             uint16_t b = (final_b[i] < 25) ? (uint16_t)(25 * set_led) : final_b[i];
+            r = (final_r[i] > 255) ? (uint16_t)(255 * set_led) : r;
+            g = (final_g[i] > 255) ? (uint16_t)(255 * set_led) : g;
+            b = (final_b[i] > 255) ? (uint16_t)(255 * set_led) : b;
 
             ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, r, g, b));
         }

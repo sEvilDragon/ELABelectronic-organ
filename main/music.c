@@ -1,8 +1,14 @@
 #include "TASK_BUZZER.h"
 #include "TASK_LED.h"
+#include "u8g2.h"
+#include "u8x8.h"
+
+extern u8g2_t u8g2;
+
 void ttp_mutex_write(uint16_t new_dat);
 
 extern int check_led;
+extern int check_oled;
 static const char *TAG = "log_music";
 // 播放神秘小曲的代码
 void musictask(int message, int continue_time, int stop_time)
@@ -14,16 +20,35 @@ void musictask(int message, int continue_time, int stop_time)
     {
         ESP_LOGW(TAG, "Queue full, message not sent");
     }
+    while (continue_time)
+    {
+        if (check_oled = 8)
+        {
+            while (1)
+            {
+                u8g2_ClearBuffer(&u8g2);
 
-    vTaskDelay(pdMS_TO_TICKS(continue_time));
+                u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+                u8g2_DrawUTF8(&u8g2, 1, 63, "暂停B");
+                u8g2_DrawUTF8(&u8g2, 85, 63, "跳转L");
+                u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
+                OLED_scroll_text();
+                vTaskDelay(pdMS_TO_TICKS(50));
+                if (check_oled == 7)
+                    break;
+            }
+        }
+        continue_time -= 20;
+        if (continue_time < 0)
+            continue_time = 20;
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
     ttp_mutex_write(65535);
     vTaskDelay(pdMS_TO_TICKS(stop_time));
 }
 // 神秘小曲的代码
 void music_start(void)
 {
-    int old_check = check_led;
-    check_led = 4;
     vTaskDelay(pdMS_TO_TICKS(500));
     musictask(0b1000000000010000, 600, 10);
     musictask(0b0000000000010010, 300, 10);
@@ -280,5 +305,4 @@ void music_start(void)
     musictask(0b0000000000000000, 900, 10); // 434550
 
     vTaskDelay(pdMS_TO_TICKS(500));
-    check_led = old_check;
 }

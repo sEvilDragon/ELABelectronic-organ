@@ -6,6 +6,7 @@ extern int check_speed;
 extern int set_voice;
 extern float set_led;
 extern float speed;
+u8g2_uint_t x = 64;
 u8g2_t u8g2;
 static const char *TAG = "log_u8g2";
 
@@ -134,7 +135,7 @@ void caidan2(void)
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
-    u8g2_DrawUTF8(&u8g2, 50, 15, "设定");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "亮度：");
     int led = set_led * 100;
     switch (led)
@@ -163,7 +164,7 @@ void caidan3(void)
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
-    u8g2_DrawUTF8(&u8g2, 0, 15, "-------设定------");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "光种：");
     switch (check_led)
     {
@@ -196,7 +197,7 @@ void caidan4(void)
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
-    u8g2_DrawUTF8(&u8g2, 50, 15, "设定");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "流光速：");
     switch (check_speed)
     {
@@ -225,6 +226,49 @@ void caidan4(void)
     u8g2_SendBuffer(&u8g2);
 }
 
+void caidan5(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
+    u8g2_DrawUTF8(&u8g2, 32, 40, "播放音乐");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan6(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
+    u8g2_DrawUTF8(&u8g2, 32, 40, "一点感想");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan7(void)
+{
+}
+
+void caidan6(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "继续B");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "结束L");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
+    u8g2_DrawUTF8(&u8g2, 32, 40, "音乐暂停");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
 void caidan1(void)
 {
     u8g2_ClearBuffer(&u8g2);
@@ -232,7 +276,7 @@ void caidan1(void)
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
-    u8g2_DrawUTF8(&u8g2, 50, 15, "设定");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
 
     switch (set_voice)
@@ -279,6 +323,18 @@ void vWordTask(void *pvParameters)
         case 4:
             caidan4();
             break;
+        case 5:
+            caidan5();
+            break;
+        case 6:
+            caidan6();
+            break;
+        case 7:
+            caidan7();
+            break;
+        case 8:
+            caidan8();
+            break;
         default:
             break;
         }
@@ -288,45 +344,17 @@ void vWordTask(void *pvParameters)
 
 void OLED_scroll_text(void)
 {
-    // 1. 设置字体 (使用您自定义的字体)
-    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3); // 替换为您实际使用的字体
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
 
-    // 2. 获取文本的宽度
-    const char *text_to_scroll = "  正在播放春日影   "; // 可以在头尾加空格以实现平滑循环
+    const char *text_to_scroll = "  正在播放《春日影》   ";
     u8g2_uint_t text_width = u8g2_GetUTF8Width(&u8g2, text_to_scroll);
 
-    // 屏幕宽度
-    const u8g2_uint_t screen_width = u8g2_GetDisplayWidth(&u8g2); // 128
+    u8g2_DrawUTF8(&u8g2, x, 40, text_to_scroll);
 
-    // 滚动范围: 从屏幕最右侧开始 (screen_width) 一直到文本完全移出左侧 (-text_width)
-    // 滚动总距离 = 屏幕宽度 + 文本宽度
-
-    // 初始X坐标 (从屏幕最右侧开始)
-    u8g2_uint_t current_x = screen_width;
-
-    // 无限循环进行滚动动画
-    while (1)
+    u8g2_SendBuffer(&u8g2);
+    x -= 2;
+    if (x <= -text_width)
     {
-        // 3. 清除和重绘
-        u8g2_ClearBuffer(&u8g2);
-
-        // 在当前 X 坐标上绘制文本（例如在基线 Y=15 处）
-        u8g2_DrawUTF8(&u8g2, current_x, 40, text_to_scroll);
-
-        // 4. 更新屏幕和延时
-        u8g2_SendBuffer(&u8g2);
-
-        // 减小 X 坐标（向左移动）
-        current_x -= 1; // 每次移动 1 像素 (可以改为 2 或 3 像素加速)
-
-        // 检查文本是否完全滚出左侧
-        if (current_x <= -text_width)
-        {
-            // 如果滚出，将 X 坐标重置到屏幕右侧，实现循环滚动
-            current_x = screen_width;
-        }
-
-        // 控制滚动速度 (在 ESP-IDF 中使用 vTaskDelay)
-        vTaskDelay(pdMS_TO_TICKS(20)); // 延时 20ms，可以调整
+        x = 127;
     }
 }

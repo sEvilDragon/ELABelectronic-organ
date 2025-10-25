@@ -83,11 +83,14 @@ void vBuzzerTask(void *pvParameters)
 
     while (1)
     {
+        if (check_oled == 7)
+            goto a;
         if (check_oled)
         {
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
         }
+    a:
         uint16_t dat = ttp_mutex_get();
         // 待办：AI将buzzer_set_tone(0);放到了后面，但之前放后面出现过问题
         int buzzer = 0;
@@ -98,22 +101,6 @@ void vBuzzerTask(void *pvParameters)
         {
             j = 2;
             led_mutex_write(check_led, led_mutex_get(check_led) + 10);
-        }
-        else if (((~dat) & 32) == 32)
-        {
-            int a = xTaskGetTickCount();
-            if (a - b > 50)
-            {
-                if (check_led == 3)
-                {
-                    check_led = 0;
-                }
-                else
-                {
-                    check_led = check_led + 1;
-                }
-                b = a;
-            }
         }
         else if (((~dat) & 64) == 64)
         {

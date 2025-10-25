@@ -126,28 +126,64 @@ void vReadTask(void *pvParameters)
             mew_dat = (datt);
         }
         ttp_mutex_write(mew_dat);
-        if (((~dat) & 128) == 128)
+        if ((((~dat) & 128) == 128) && check_oled < 5)
         {
             if (check_oled == 0)
                 check_oled = 1;
-            else
+            else if (check_oled < 5)
                 check_oled = 0;
             vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
-        if (check_oled && ((~dat) & 16) == 16)
+        if ((check_oled == 0 || (check_oled >= 5 && check_oled <= 7)) && ((~dat) & 32) == 32)
+        {
+            if (check_oled == 0)
+                check_oled = 5;
+            else if (check_oled > 4)
+                check_oled = 0;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
+        }
+        if ((check_oled == 7 || check_oled == 8) && ((~dat) & 32) == 32)
+        {
+            if (check_oled == 7)
+                check_oled = 8;
+            else if (check_oled == 8)
+                check_oled = 7;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
+        }
+        if (check_oled && check_oled >= 5 && ((~dat) & 16) == 16)
+        {
+            check_oled++;
+            if (check_oled == 7)
+                check_oled = 5;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
+        }
+        if (check_oled && check_oled >= 5 && ((~dat) & 64) == 64)
+        {
+            check_oled--;
+            if (check_oled == 4)
+                check_oled = 6;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
+        }
+        if (check_oled && check_oled < 5 && ((~dat) & 16) == 16)
         {
             check_oled++;
             if (check_oled == 5)
                 check_oled = 1;
             vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
         }
-        if (check_oled && ((~dat) & 64) == 64)
+        if (check_oled && check_oled < 5 && ((~dat) & 64) == 64)
         {
             check_oled--;
             if (check_oled == 0)
                 check_oled = 4;
             vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
         }
         if (voice)
         {
@@ -162,7 +198,8 @@ void vReadTask(void *pvParameters)
             if (set_voice == 4)
                 set_voice = 0;
             voice++;
-            vTaskDelay(pdMS_TO_TICKS(20));
+            vTaskDelay(pdMS_TO_TICKS(150));
+            continue;
         }
         if ((((~dat) & 32) == 32) && (check_oled == 2))
         {
@@ -172,6 +209,7 @@ void vReadTask(void *pvParameters)
             if (ledpanduan == 4)
                 ledpanduan = 0;
             vTaskDelay(pdMS_TO_TICKS(150));
+            continue;
         }
         if ((((~dat) & 32) == 32) && (check_oled == 3))
         {
@@ -179,6 +217,7 @@ void vReadTask(void *pvParameters)
             if (check_led == 5)
                 check_led = 0;
             vTaskDelay(pdMS_TO_TICKS(150));
+            continue;
         }
         if ((((~dat) & 32) == 32) && (check_oled == 4))
         {
@@ -186,6 +225,7 @@ void vReadTask(void *pvParameters)
             if (check_speed == 5)
                 check_speed = 0;
             vTaskDelay(pdMS_TO_TICKS(150));
+            continue;
         }
         // 只有当按键状态发生变化时才处理
         if (!check_oled)
