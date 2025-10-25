@@ -1,12 +1,13 @@
 #include "TASK_BUZZER.h"
 #include "TASK_LED.h"
+void ttp_mutex_write(uint16_t new_dat);
 
-extern int check;
+extern int check_led;
 static const char *TAG = "log_music";
 // 播放神秘小曲的代码
 void musictask(int message, int continue_time, int stop_time)
 {
-    uint16_t dat = (~message);
+    ttp_mutex_write(~message);
     message = (message & 0b1111111100001111);
 
     if (xQueueSend(xQueue, &message, pdMS_TO_TICKS(100)) != pdPASS)
@@ -14,77 +15,15 @@ void musictask(int message, int continue_time, int stop_time)
         ESP_LOGW(TAG, "Queue full, message not sent");
     }
 
-    buzzer_set_tone(0);
-    double j = 1;
-    if (((~dat) & 16) == 16)
-    {
-        j = 2;
-        led_mutex_write(check, 90);
-    }
-    else if (((~dat) & 64) == 64)
-    {
-        j = 0.5;
-        led_mutex_write(check, 70);
-    }
-
-    if (((~dat) & 2048) == 2048) // 如果是第12个按键被按下
-    {
-        buzzer_set_tone((int)(493 * j));
-    }
-    if (((~dat) & 1024) == 1024)
-    {
-        buzzer_set_tone((int)(466 * j));
-    }
-    if (((~dat) & 512) == 512)
-    {
-        buzzer_set_tone((int)(440 * j));
-    }
-    if (((~dat) & 256) == 256)
-    {
-        buzzer_set_tone((int)(415 * j));
-    }
-    if (((~dat) & 4096) == 4096)
-    {
-        buzzer_set_tone((int)(392 * j));
-    }
-    if (((~dat) & 8192) == 8192)
-    {
-        buzzer_set_tone((int)(370 * j));
-    }
-    if (((~dat) & 16384) == 16384)
-    {
-        buzzer_set_tone((int)(349 * j));
-    }
-    if (((~dat) & 32768) == 32768)
-    {
-        buzzer_set_tone((int)(329 * j));
-    }
-    if (((~dat) & 1) == 1)
-    {
-        buzzer_set_tone((int)(311 * j));
-    }
-    if (((~dat) & 2) == 2)
-    {
-        buzzer_set_tone((int)(293 * j));
-    }
-    if (((~dat) & 4) == 4)
-    {
-        buzzer_set_tone((int)(277 * j));
-    }
-    if (((~dat) & 8) == 8)
-    {
-        buzzer_set_tone((int)(261 * j));
-    }
-
     vTaskDelay(pdMS_TO_TICKS(continue_time));
-    buzzer_set_tone(0);
+    ttp_mutex_write(65535);
     vTaskDelay(pdMS_TO_TICKS(stop_time));
 }
 // 神秘小曲的代码
 void music_start(void)
 {
-    int old_check = check;
-    check = 4;
+    int old_check = check_led;
+    check_led = 4;
     vTaskDelay(pdMS_TO_TICKS(500));
     musictask(0b1000000000010000, 600, 10);
     musictask(0b0000000000010010, 300, 10);
@@ -341,5 +280,5 @@ void music_start(void)
     musictask(0b0000000000000000, 900, 10); // 434550
 
     vTaskDelay(pdMS_TO_TICKS(500));
-    check = old_check;
+    check_led = old_check;
 }

@@ -1,25 +1,66 @@
 #include "TASK_OLED.h"
 
+extern int check_oled;
+extern int set_voice;
 u8g2_t u8g2;
+spi_device_handle_t spi;
+static const char *TAG = "log_u8g2";
+
+void buzzer_mutex_write(int new_duty);
+
+// 设置一个数组用于在屏幕上显示大了上面字
+char letter[3] = {0};
+
+// 尝试创建一个互斥锁
+void letter_mutex_start(void)
+{
+    letter_mutex = xSemaphoreCreateMutex();
+    if (letter_mutex == NULL)
+        ESP_LOGE(TAG, "FATAL: Failed to create led_mutex");
+}
+
+// 创建一个函数用于写入互斥锁数据
+void letter_mutex_write(int tag, int value)
+{
+    if (tag < 0 || tag >= 3)
+        return;
+    if (xSemaphoreTake(letter_mutex, portMAX_DELAY) == pdTRUE)
+    {
+        letter[tag] = value;
+        xSemaphoreGive(letter_mutex);
+    }
+}
+
+// 创建一个函数用于读取互斥锁数据
+int letter_mutex_get(int tag)
+{
+    int value = 0;
+    if (tag < 0 || tag >= 3)
+        return value;
+    if (xSemaphoreTake(letter_mutex, portMAX_DELAY) == pdTRUE)
+    {
+        value = letter[tag];
+        xSemaphoreGive(letter_mutex);
+    }
+    return value;
+}
 
 uint8_t u8g2_gpio_and_delay_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr)
 {
     switch (msg)
     {
     case U8X8_MSG_GPIO_AND_DELAY_INIT:
-        // 在你的 oled_spi_start() 中已经做了 GPIO 初始化和 RES 复位，这里可以跳过或只做简单检查
         break;
-
-        // 【重要：移除 U8X8_MSG_GPIO_SPI_DATA 和 CLOCK 的处理，因为我们用硬件SPI】
-
+    case U8X8_MSG_GPIO_SPI_CLOCK:
+        gpio_set_level(OLED_SCL, arg_int);
+        break;
+    case U8X8_MSG_GPIO_SPI_DATA:
+        gpio_set_level(OLED_SDA, arg_int);
+        break;
     case U8X8_MSG_GPIO_CS:
-        // 这里的 CS 控制逻辑必须与 devcfg.spics_io_num 匹配
-        // 如果 spi_bus_add_device 自动管理 CS，这里可能不需要操作
-        // 如果要手动控制 CS，则：gpio_set_level(OLED_CS, arg_int);
+        gpio_set_level(OLED_CS, arg_int);
         break;
-
     case U8X8_MSG_GPIO_DC:
-        // 在硬件 SPI 模式下，U8g2 也会在这里设置 DC。
         gpio_set_level(OLED_DC, arg_int);
         break;
 
@@ -30,49 +71,6 @@ uint8_t u8g2_gpio_and_delay_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void 
     case U8X8_MSG_DELAY_MILLI:
         vTaskDelay(pdMS_TO_TICKS(arg_int));
         break;
-        // ... 其他延时消息 ...
-
-    default:
-        return 0;
-    }
-    return 1;
-}
-
-uint8_t u8g2_hw_spi_byte_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr)
-{
-    switch (msg)
-    {
-    case U8X8_MSG_BYTE_INIT:
-        // 初始化 SPI 句柄（你已在 oled_spi_start 中完成）
-        break;
-
-    case U8X8_MSG_BYTE_SET_DC:
-        break;
-
-    case U8X8_MSG_BYTE_SEND:
-    {
-        uint8_t *data = (uint8_t *)arg_ptr;
-        size_t len = arg_int;
-
-        if (len > 0)
-        {
-            spi_transaction_t t;
-            memset(&t, 0, sizeof(t));
-            t.length = len * 8;
-            t.tx_buffer = data;
-            // 不需要 t.user 和 pre_cb，因为 U8g2 会在调用 SEND 之前，先调用 SET_DC
-
-            // 使用你的全局 SPI 句柄进行传输
-            spi_device_transmit(spi, &t);
-        }
-        break;
-    }
-
-    // U8g2 可能会发送 START/END TRANSFER 消息，但如果使用 ESP-IDF 硬件SPI，通常可以忽略
-    case U8X8_MSG_BYTE_START_TRANSFER:
-    case U8X8_MSG_BYTE_END_TRANSFER:
-        break;
-
     default:
         return 0;
     }
@@ -83,299 +81,139 @@ void u8g2_app_init(void)
 {
     u8g2_Setup_ssd1306_128x64_noname_f(&u8g2,
                                        U8G2_R0,
-                                       u8g2_hw_spi_byte_cb,
+                                       u8x8_byte_4wire_sw_spi, // <-- 使用 U8G2 内置的软件 SPI 驱动
                                        u8g2_gpio_and_delay_cb);
 
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
+    u8g2_ClearBuffer(&u8g2);
+    u8g2_SendBuffer(&u8g2);
 }
 
-void OLED_word(void)
+void OLED_menu(void)
 {
-    uint8_t data1[] = {0b00000100,
-                       0b00100100,
-                       0b00100100,
-                       0b00100100,
-                       0b01111111,
-                       0b11000100,
-                       0b01000100,
-                       0b00000100,
-                       0b00000100,
-                       0b11111111,
-                       0b00000100,
-                       0b01000100,
-                       0b00110100,
-                       0b00000101,
-                       0b00000100,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b11111110,
-                       0b10010010,
-                       0b10010010,
-                       0b10010010,
-                       0b10010010,
-                       0b10010010,
-                       0b10010010,
-                       0b10010010,
-                       0b11111110,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00011111,
-                       0b00010001,
-                       0b00010001,
-                       0b00010001,
-                       0b00010001,
-                       0b11111111,
-                       0b00010001,
-                       0b00010001,
-                       0b00010001,
-                       0b00010001,
-                       0b00011111,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000001,
-                       0b01000001,
-                       0b01000001,
-                       0b01000001,
-                       0b01000001,
-                       0b01000001,
-                       0b01000001,
-                       0b01000111,
-                       0b01000101,
-                       0b01001001,
-                       0b01010001,
-                       0b01100001,
-                       0b01000001,
-                       0b00000001,
-                       0b00000001,
-                       0b00000000,
-                       0b01000001,
-                       0b01001001,
-                       0b01001001,
-                       0b01111111,
-                       0b01001001,
-                       0b01001001,
-                       0b01000001,
-                       0b00000000,
-                       0b01000001,
-                       0b01001001,
-                       0b01001001,
-                       0b01111111,
-                       0b01001001,
-                       0b01001001,
-                       0b01000001,
-                       0b00000000,
-                       0b00000101,
-                       0b01000101,
-                       0b00101001,
-                       0b00010001,
-                       0b11111111,
-                       0b00000001,
-                       0b00010001,
-                       0b00100101,
-                       0b01100101,
-                       0b10110101,
-                       0b00101001,
-                       0b00101001,
-                       0b00110001,
-                       0b00100001,
-                       0b00000001,
-                       0b00000000};
-    uint8_t data2[] = {0b00000000,
-                       0b00010000,
-                       0b00010010,
-                       0b00100001,
-                       0b11111110,
-                       0b01000000,
-                       0b10000010,
-                       0b00000010,
+    char display_buffer[64]; // 临时缓冲区
+    int array_index = 1;     // 想要打印的数组索引
 
-                       0b00000100,
-                       0b11001000,
-                       0b00110000,
-                       0b01000100,
-                       0b10000010,
-                       0b00011111,
-                       0b00000000,
-                       0b00000000,
-                       0b10000001,
+    u8g2_ClearBuffer(&u8g2);
 
-                       0b10000010,
-                       0b10000100,
-                       0b10111000,
-                       0b10000100,
-                       0b10000010,
-                       0b10000001,
-                       0b11111111,
+    u8g2_SetFont(&u8g2, u8g2_font_helvR08_tf);
+    u8g2_DrawUTF8(&u8g2, 50, 8, "Ciallo~");
 
-                       0b10010001,
-                       0b10010001,
-                       0b10010001,
-                       0b10010001,
-                       0b10010001,
-                       0b10000001,
-                       0b10000001,
-                       0b00000000,
+    u8g2_SetFont(&u8g2, u8g2_font_helvR14_tf);
+    array_index = 0;
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%c", letter[array_index]);
+    u8g2_DrawUTF8(&u8g2, 10, 40, display_buffer);
 
-                       0b00000000,
-                       0b00000000,
-                       0b11111000,
-                       0b00010000,
-                       0b00010000,
-                       0b00010000,
-                       0b00010000,
-                       0b11111110,
+    array_index = 1;
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%c", letter[array_index]);
+    u8g2_DrawUTF8(&u8g2, 32, 40, display_buffer);
 
-                       0b00010001,
-                       0b00010001,
-                       0b00010001,
-                       0b00010001,
-                       0b11111001,
-                       0b00000001,
-                       0b00001111,
-                       0b00000000,
+    u8g2_SetFont(&u8g2, u8g2_font_helvR24_tf);
+    array_index = 2;
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%c", letter[array_index]);
+    u8g2_DrawUTF8(&u8g2, 55, 40, display_buffer);
 
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000010,
-                       0b00000001,
-                       0b11111110,
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "菜单L");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "音乐B");
 
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+    u8g2_SendBuffer(&u8g2);
+    vTaskDelay(pdMS_TO_TICKS(50));
+}
 
-                       0b00010000,
-                       0b00010000,
-                       0b00010000,
-                       0b00101000,
-                       0b00101000,
-                       0b01001000,
-                       0b01101000,
-                       0b10011001,
+void caidan1(void)
+{
+    u8g2_ClearBuffer(&u8g2);
 
-                       0b01001010,
-                       0b01001100,
-                       0b00101000,
-                       0b00100000,
-                       0b00010000,
-                       0b00010000,
-                       0b00010000,
-                       0b00000000,
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 50, 15, "菜单");
+    u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
+    switch (set_voice)
+    {
+    case 0:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " ++ ");
+        buzzer_mutex_write(80);
+        break;
+    case 1:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " +++ ");
+        buzzer_mutex_write(2048);
+        break;
+    case 2:
+        u8g2_DrawUTF8(&u8g2, 64, 40, "  ");
+        buzzer_mutex_write(0);
+        break;
+    case 3:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " + ");
+        buzzer_mutex_write(20);
+        break;
+    }
 
-                       0b00000000,
-                       0b00000000,
-                       0b01111111,
-                       0b01001101,
-                       0b01010101,
-                       0b11100101,
-                       0b01000101,
-                       0b01000101,
+    u8g2_SendBuffer(&u8g2);
+}
 
-                       0b11100101,
-                       0b01010101,
-                       0b01010101,
-                       0b01010101,
-                       0b01111111,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000};
+void vWordTask(void *pvParameters)
+{
+    while (1)
+    {
+        switch (check_oled)
+        {
+        case 0:
+            OLED_menu();
+            break;
+        case 1:
+            caidan1();
+            break;
+        }
+    }
+}
 
-    uint8_t data3[] = {0b00111110,
-                       0b01000010,
-                       0b01000010,
-                       0b01100100,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+void OLED_scroll_text(void)
+{
+    // 1. 设置字体 (使用您自定义的字体)
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3); // 替换为您实际使用的字体
 
-                       0b00010010,
-                       0b01111110,
-                       0b00000010,
-                       0b00000000,
+    // 2. 获取文本的宽度
+    const char *text_to_scroll = "  正在播放春日影   "; // 可以在头尾加空格以实现平滑循环
+    u8g2_uint_t text_width = u8g2_GetUTF8Width(&u8g2, text_to_scroll);
 
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+    // 屏幕宽度
+    const u8g2_uint_t screen_width = u8g2_GetDisplayWidth(&u8g2); // 128
 
-                       0b00001110,
-                       0b00010110,
-                       0b00011110,
-                       0b00000010,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+    // 滚动范围: 从屏幕最右侧开始 (screen_width) 一直到文本完全移出左侧 (-text_width)
+    // 滚动总距离 = 屏幕宽度 + 文本宽度
 
-                       0b00100010,
-                       0b01111110,
-                       0b00000010,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+    // 初始X坐标 (从屏幕最右侧开始)
+    u8g2_uint_t current_x = screen_width;
 
-                       0b00100010,
-                       0b01111110,
-                       0b00000010,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+    // 无限循环进行滚动动画
+    while (1)
+    {
+        // 3. 清除和重绘
+        u8g2_ClearBuffer(&u8g2);
 
-                       0b00001110,
-                       0b00010010,
-                       0b00010010,
-                       0b00001110,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
-                       0b00000000,
+        // 在当前 X 坐标上绘制文本（例如在基线 Y=15 处）
+        u8g2_DrawUTF8(&u8g2, current_x, 40, text_to_scroll);
 
-                       0b00001000,
-                       0b00011000,
-                       0b00010000,
-                       0b00001000,
-                       0b00001000,
-                       0b00001000,
-                       0b00011000,
-                       0b00000000};
+        // 4. 更新屏幕和延时
+        u8g2_SendBuffer(&u8g2);
 
-    location(5, 16);
-    oled_send_data(data1, sizeof(data1));
+        // 减小 X 坐标（向左移动）
+        current_x -= 1; // 每次移动 1 像素 (可以改为 2 或 3 像素加速)
 
-    location(4, 16);
-    oled_send_data(data2, sizeof(data2));
+        // 检查文本是否完全滚出左侧
+        if (current_x <= -text_width)
+        {
+            // 如果滚出，将 X 坐标重置到屏幕右侧，实现循环滚动
+            current_x = screen_width;
+        }
 
-    location(2, 38);
-    oled_send_data(data3, sizeof(data3));
-
-    oled_send_cmd(0x2E);
-    oled_send_cmd(0x27);
-    oled_send_cmd(0x00); // Dummy byte A
-    oled_send_cmd(0x00); // P2: 开始页 (0-7)
-    oled_send_cmd(0x00); // P3: 时间间隔
-    oled_send_cmd(0x03); // P4: 结束页 (0-7)
-    oled_send_cmd(0x00); // Dummy byte B
-    oled_send_cmd(0xFF); // Dummy byte C
-    oled_send_cmd(0x2F);
+        // 控制滚动速度 (在 ESP-IDF 中使用 vTaskDelay)
+        vTaskDelay(pdMS_TO_TICKS(20)); // 延时 20ms，可以调整
+    }
 }

@@ -1,6 +1,7 @@
 #include "TASK_BUZZER.h"
 
-extern int check;
+extern int check_led;
+extern int check_oled;
 static int duty = 2048;
 static const char *TAG = "log_buzzer";
 
@@ -62,7 +63,7 @@ void buzzer_set_tone(int freq_hz)
         // 设置新的频率
         ledc_set_freq(LEDC_HIGH_SPEED_MODE, LEDC_TIMER, freq_hz);
 
-        ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL, duty);
+        ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL, buzzer_mutex_get());
         ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL);
     }
     else
@@ -82,6 +83,11 @@ void vBuzzerTask(void *pvParameters)
 
     while (1)
     {
+        if (check_oled == 1)
+        {
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
+        }
         uint16_t dat = ttp_mutex_get();
         // 待办：AI将buzzer_set_tone(0);放到了后面，但之前放后面出现过问题
         int buzzer = 0;
@@ -91,20 +97,20 @@ void vBuzzerTask(void *pvParameters)
         if (((~dat) & 16) == 16)
         {
             j = 2;
-            led_mutex_write(check, led_mutex_get(check) + 10);
+            led_mutex_write(check_led, led_mutex_get(check_led) + 10);
         }
         else if (((~dat) & 32) == 32)
         {
             int a = xTaskGetTickCount();
             if (a - b > 50)
             {
-                if (check == 3)
+                if (check_led == 3)
                 {
-                    check = 0;
+                    check_led = 0;
                 }
                 else
                 {
-                    check = check + 1;
+                    check_led = check_led + 1;
                 }
                 b = a;
             }
@@ -112,18 +118,14 @@ void vBuzzerTask(void *pvParameters)
         else if (((~dat) & 64) == 64)
         {
             j = 0.5;
-            led_mutex_write(check, led_mutex_get(check) - 10);
+            led_mutex_write(check_led, led_mutex_get(check_led) - 10);
         }
-        // else if (((~dat) & 128) == 128)
-        // {
-        //     music_start();
-        // }
-        // 待办：这里的函数需要调整
 
         led_mutex_write(1, 25);
         led_mutex_write(2, 25);
         led_mutex_write(3, 25);
         led_mutex_write(4, 25);
+        led_mutex_write(check_led, 120);
 
         if (((~dat) & 2048) == 2048) // 如果是第12个按键被按下
         {
@@ -194,6 +196,6 @@ void vBuzzerTask(void *pvParameters)
         buzzer = buzzer / k;
         buzzer_set_tone(buzzer * j);
 
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

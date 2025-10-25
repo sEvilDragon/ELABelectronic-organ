@@ -1,7 +1,8 @@
 #include <TASK_LED.h>
 #include <math.h>
 
-extern int check;
+extern int check_led;
+extern int check_oled;
 static const char *TAG = "log_led";
 static int max_shine[5] = {25, 25, 25, 25, 0};
 animation_instance_t g_animations[MAX_CONCURRENT_ANIMATIONS];
@@ -87,14 +88,19 @@ void led_animation_task(void *pvParameters)
 
     while (1)
     {
-        // 待办：这里的写入最好放在蜂鸣器任务中
-        led_mutex_write(check, 120);
+        if (check_oled == 1)
+        {
+            for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
+                ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 60, 25, 25));
+            ESP_ERROR_CHECK(led_strip_refresh(led_strip));
+            continue;
+        }
 
         uint16_t final_r[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
         uint16_t final_g[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
         uint16_t final_b[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
 
-        switch (check)
+        switch (check_led)
         {
         case 1:
             for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
@@ -153,7 +159,7 @@ void led_animation_task(void *pvParameters)
                 int BASE_R = led_mutex_get(0);
                 int BASE_G = led_mutex_get(2);
                 int BASE_B = led_mutex_get(1);
-                switch (check)
+                switch (check_led)
                 {
                 case 3:
                     BASE_R = led_mutex_get(3);

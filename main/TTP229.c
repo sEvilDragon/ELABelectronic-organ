@@ -1,6 +1,8 @@
 #include "TASK_TTP.h"
 
-extern int check;
+extern int check_led;
+extern int check_oled;
+extern int set_voice;
 extern QueueHandle_t xQueue;
 static uint16_t dat = 0;
 static const char *TAG = "log_ttp";
@@ -122,10 +124,21 @@ void vReadTask(void *pvParameters)
         ttp_mutex_write(mew_dat);
         if (((~dat) & 128) == 128)
         {
-            music_start();
+            if (check_oled == 0)
+                check_oled = 1;
+            else
+                check_oled = 0;
+            vTaskDelay(pdMS_TO_TICKS(200));
+        }
+        if (((~dat) & 32) == 32)
+        {
+            set_voice++;
+            if (set_voice == 4)
+                set_voice = 0;
+            vTaskDelay(pdMS_TO_TICKS(200));
         }
         // 只有当按键状态发生变化时才处理
-        if (check != 4)
+        if (check_led != 4)
         {
             unsigned short changed_bits = 0;
             unsigned short pressed_bits = 0;

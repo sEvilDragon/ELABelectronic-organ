@@ -17,19 +17,28 @@
 #define OLED_SCL GPIO_NUM_4  // 时针线
 
 extern u8g2_t u8g2;
-static spi_device_handle_t spi;
+static SemaphoreHandle_t letter_mutex = NULL;
+// extern spi_device_handle_t spi;
 
 uint8_t gpio_and_delay_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
-void oled_spi_pre_transfer_callback(spi_transaction_t *t);
+// void oled_spi_pre_transfer_callback(spi_transaction_t *t);
 void oled_spi_start(void);
-void oled_send_cmd(uint8_t cmd);
-void oled_send_data(uint8_t data[], size_t length);
-void location(int page, int y);
-void OLED_clear(unsigned int page);
-void OLED_word(void);
+// void oled_send_cmd(uint8_t cmd);
+// void oled_send_data(uint8_t data[], size_t length);
+// void location(int page, int y);
+// void OLED_clear(unsigned int page);
+// void OLED_word(void);
 
 uint8_t u8g2_gpio_and_delay_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
 uint8_t u8g2_hw_spi_byte_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
 void u8g2_app_init(void);
+
+void letter_mutex_start(void);
+void letter_mutex_write(int tag, int value);
+int letter_mutex_get(int tag);
+
+void OLED_menu(void);
+void OLED_scroll_text(void);
+void vWordTask(void *pvParameters);
 
 #endif
