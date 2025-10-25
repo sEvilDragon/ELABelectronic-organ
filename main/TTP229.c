@@ -2,6 +2,7 @@
 
 extern int check_led;
 extern int check_oled;
+extern int check_speed;
 extern int set_voice;
 extern float set_led;
 extern QueueHandle_t xQueue;
@@ -106,6 +107,8 @@ void vReadTask(void *pvParameters)
     uint16_t mew_dat = 0;
     uint16_t last_dat = 0;
     uint16_t datt;
+    uint16_t ledpanduan = 0;
+    int voice = 0;
     int panduan = vReadttp229Task();
     last_dat = vReadttp229Task();
     ttp_mutex_write(last_dat);
@@ -130,37 +133,62 @@ void vReadTask(void *pvParameters)
             else
                 check_oled = 0;
             vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
         }
-        if (check_oled)
+        if (check_oled && ((~dat) & 16) == 16)
         {
-            switch (check_oled)
-            {
-            case 1:
-                if (((~dat) & 32) == 32)
-                {
-                    set_voice++;
-                    if (set_voice == 4)
-                        set_voice = 0;
-                    vTaskDelay(pdMS_TO_TICKS(200));
-                    break;
-                case 2:
-                    float ledmax[4] = {1, 1.25, 0, 0.5};
-                    if (((~dat) & 32) == 32)
-                    {
-                        int i = 0;
-                        set_led = ledmax[i];
-                        vTaskDelay(pdMS_TO_TICKS(200));
-                        i++;
-                        if (i == 4)
-                            i = 0;
-                        break;
-                    }
-                }
-                continue;
-            }
+            check_oled++;
+            if (check_oled == 5)
+                check_oled = 1;
+            vTaskDelay(pdMS_TO_TICKS(200));
+        }
+        if (check_oled && ((~dat) & 64) == 64)
+        {
+            check_oled--;
+            if (check_oled == 0)
+                check_oled = 4;
+            vTaskDelay(pdMS_TO_TICKS(200));
+        }
+        if (voice)
+        {
+            buzzer_set_tone(400);
+            vTaskDelay(pdMS_TO_TICKS(80));
+            buzzer_set_tone(0);
+            voice = 0;
+        }
+        if ((((~dat) & 32) == 32) && (check_oled == 1))
+        {
+            set_voice++;
+            if (set_voice == 4)
+                set_voice = 0;
+            voice++;
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+        if ((((~dat) & 32) == 32) && (check_oled == 2))
+        {
+            float ledmax[4] = {1, 1.25, 0, 0.5};
+            set_led = ledmax[ledpanduan];
+            ledpanduan++;
+            if (ledpanduan == 4)
+                ledpanduan = 0;
+            vTaskDelay(pdMS_TO_TICKS(150));
+        }
+        if ((((~dat) & 32) == 32) && (check_oled == 3))
+        {
+            check_led++;
+            if (check_led == 5)
+                check_led = 0;
+            vTaskDelay(pdMS_TO_TICKS(150));
+        }
+        if ((((~dat) & 32) == 32) && (check_oled == 4))
+        {
+            check_speed++;
+            if (check_speed == 5)
+                check_speed = 0;
+            vTaskDelay(pdMS_TO_TICKS(150));
         }
         // 只有当按键状态发生变化时才处理
-        if (check_led != 4)
+        if (!check_oled)
         {
             unsigned short changed_bits = 0;
             unsigned short pressed_bits = 0;

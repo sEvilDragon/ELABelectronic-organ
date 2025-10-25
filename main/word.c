@@ -1,8 +1,11 @@
 #include "TASK_OLED.h"
 
 extern int check_oled;
+extern int check_led;
+extern int check_speed;
 extern int set_voice;
 extern float set_led;
+extern float speed;
 u8g2_t u8g2;
 static const char *TAG = "log_u8g2";
 
@@ -118,11 +121,10 @@ void OLED_menu(void)
     u8g2_DrawUTF8(&u8g2, 55, 40, display_buffer);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "菜单B");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "音乐L");
+    u8g2_DrawUTF8(&u8g2, 1, 63, "设定B");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "菜单L");
 
     u8g2_SendBuffer(&u8g2);
-    vTaskDelay(pdMS_TO_TICKS(50));
 }
 
 void caidan2(void)
@@ -132,26 +134,91 @@ void caidan2(void)
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
-    u8g2_DrawUTF8(&u8g2, 50, 15, "菜单");
-    u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
+    u8g2_DrawUTF8(&u8g2, 50, 15, "设定");
+    u8g2_DrawUTF8(&u8g2, 10, 40, "亮度：");
     int led = set_led * 100;
     switch (led)
     {
     case 100:
-        u8g2_DrawUTF8(&u8g2, 64, 40, " ++ ");
-        buzzer_mutex_write(80);
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 正常 ");
         break;
     case 125:
-        u8g2_DrawUTF8(&u8g2, 64, 40, " +++ ");
-        buzzer_mutex_write(2048);
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 很亮 ");
         break;
     case 0:
-        u8g2_DrawUTF8(&u8g2, 64, 40, "  ");
-        buzzer_mutex_write(0);
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 不亮 ");
         break;
     case 50:
-        u8g2_DrawUTF8(&u8g2, 64, 40, " + ");
-        buzzer_mutex_write(20);
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 不太亮 ");
+        break;
+    }
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan3(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "-------设定------");
+    u8g2_DrawUTF8(&u8g2, 10, 40, "光种：");
+    switch (check_led)
+    {
+    case 0:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 绿流光 ");
+        break;
+    case 1:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 红流光 ");
+        break;
+    case 2:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 蓝流光 ");
+        break;
+    case 3:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 彩虹光 ");
+        break;
+    case 4:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 红底光 ");
+        break;
+    default:
+        break;
+    }
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan4(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 50, 15, "设定");
+    u8g2_DrawUTF8(&u8g2, 10, 40, "流光速：");
+    switch (check_speed)
+    {
+    case 0:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 正常 ");
+        speed = 20;
+        break;
+    case 1:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 快 ");
+        speed = 10;
+        break;
+    case 2:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 很快 ");
+        speed = 5;
+        break;
+    case 3:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 不快 ");
+        speed = 35;
+        break;
+    default:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 很不快 ");
+        speed = 50;
         break;
     }
 
@@ -165,25 +232,25 @@ void caidan1(void)
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
-    u8g2_DrawUTF8(&u8g2, 50, 15, "菜单");
+    u8g2_DrawUTF8(&u8g2, 50, 15, "设定");
     u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
 
     switch (set_voice)
     {
     case 0:
-        u8g2_DrawUTF8(&u8g2, 64, 40, " ++ ");
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 不太大 ");
         buzzer_mutex_write(80);
         break;
     case 1:
-        u8g2_DrawUTF8(&u8g2, 64, 40, " +++ ");
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 正常 ");
         buzzer_mutex_write(2048);
         break;
     case 2:
-        u8g2_DrawUTF8(&u8g2, 64, 40, "  ");
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 没声 ");
         buzzer_mutex_write(0);
         break;
     case 3:
-        u8g2_DrawUTF8(&u8g2, 64, 40, " + ");
+        u8g2_DrawUTF8(&u8g2, 64, 40, " 小声 ");
         buzzer_mutex_write(20);
         break;
     }
@@ -206,7 +273,16 @@ void vWordTask(void *pvParameters)
         case 2:
             caidan2();
             break;
+        case 3:
+            caidan3();
+            break;
+        case 4:
+            caidan4();
+            break;
+        default:
+            break;
         }
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 

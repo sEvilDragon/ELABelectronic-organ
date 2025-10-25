@@ -23,4 +23,5 @@ void SDA_IN(void);
 unsigned short vReadttp229Task(void);
 void vReadTask(void *pvParameters);
 
+void buzzer_set_tone(int freq_hz);
 #endif
