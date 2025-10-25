@@ -3,8 +3,10 @@
 
 extern int check_led;
 extern int check_oled;
+extern int set_voice;
+extern float set_led;
 static const char *TAG = "log_led";
-static int max_shine[5] = {25, 25, 25, 25, 0};
+static int max_shine[5] = {25, 25, 25, 25, 25};
 animation_instance_t g_animations[MAX_CONCURRENT_ANIMATIONS];
 
 // 尝试创建一个互斥锁
@@ -88,17 +90,53 @@ void led_animation_task(void *pvParameters)
 
     while (1)
     {
-        if (check_oled == 1)
+        uint16_t final_r[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
+        uint16_t final_g[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
+        uint16_t final_b[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
+
+        if (check_oled)
         {
-            for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
-                ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 60, 25, 25));
-            ESP_ERROR_CHECK(led_strip_refresh(led_strip));
+            switch (check_oled)
+            {
+            case 1:
+                switch (set_voice)
+                {
+                case 2:
+                    for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 60, 25, 25));
+                    break;
+                case 3:
+                    for (int i = 0; i < 8; i++)
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 60, 25, 25));
+                    for (int i = 8; i < 12; i++)
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 25, (uint16_t)(20 * sin((xTaskGetTickCount() / 50.0f)) + 60), 25));
+                    break;
+                case 0:
+                    for (int i = 0; i < 4; i++)
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 60, 25, 25));
+                    for (int i = 4; i < 12; i++)
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 25, (uint16_t)(20 * sin((xTaskGetTickCount() / 50.0f)) + 60), 25));
+                    break;
+                case 1:
+                    for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 25, (uint16_t)(20 * sin((xTaskGetTickCount() / 50.0f)) + 60), 25));
+                    break;
+                default:
+                    break;
+                    ESP_ERROR_CHECK(led_strip_refresh(led_strip));
+                }
+                break;
+            case 2:
+                for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
+                {
+                    final_g[i] = (uint16_t)(25 * sin((xTaskGetTickCount() / 10.0f + (i + 1))) + 25);
+                    final_b[i] = (uint16_t)(25 * sin((xTaskGetTickCount() / 10.0f + (i + 2))) + 25);
+                }
+                ESP_ERROR_CHECK(led_strip_refresh(led_strip));
+                break;
+            }
             continue;
         }
-
-        uint16_t final_r[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
-        uint16_t final_g[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
-        uint16_t final_b[LED_STRIP_LED_COUNT] = {25, 25, 25, 25, 25, 25, 25, 25, 25, 25};
 
         switch (check_led)
         {
@@ -167,7 +205,7 @@ void led_animation_task(void *pvParameters)
                     BASE_B = led_mutex_get(3);
                     break;
                 case 4:
-                    BASE_R = max_shine[4];
+                    BASE_R = led_mutex_get(4);
                     BASE_G = 50;
                     BASE_B = 50;
                     break;
@@ -206,9 +244,9 @@ void led_animation_task(void *pvParameters)
         // 4. 将最终累加的颜色设置到灯条并显示
         for (int i = 0; i < LED_STRIP_LED_COUNT; i++)
         {
-            uint8_t r = (final_r[i] < 25) ? 25 : (uint8_t)final_r[i];
-            uint8_t g = (final_g[i] < 25) ? 25 : (uint8_t)final_g[i];
-            uint8_t b = (final_b[i] < 25) ? 25 : (uint8_t)final_b[i];
+            uint8_t r = (final_r[i] > 255) ? 255 : (uint8_t)final_r[i];
+            uint8_t g = (final_g[i] > 255) ? 255 : (uint8_t)final_g[i];
+            uint8_t b = (final_b[i] > 255) ? 255 : (uint8_t)final_b[i];
 
             ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, r, g, b));
         }

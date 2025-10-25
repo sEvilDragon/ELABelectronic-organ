@@ -47,4 +47,6 @@ void led_animation_task(void *pvParameters);
 // rmt初始化
 led_strip_handle_t configure_led(void);
 
+void buzzer_set_tone(int freq_hz);
+
 #endif

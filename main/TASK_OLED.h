@@ -2,7 +2,6 @@
 #define TASK_OLED_H
 
 #include "electronic_organ_main.h"
-#include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_err.h"

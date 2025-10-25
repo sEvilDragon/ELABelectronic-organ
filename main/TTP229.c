@@ -3,6 +3,7 @@
 extern int check_led;
 extern int check_oled;
 extern int set_voice;
+extern float set_led;
 extern QueueHandle_t xQueue;
 static uint16_t dat = 0;
 static const char *TAG = "log_ttp";
@@ -130,12 +131,33 @@ void vReadTask(void *pvParameters)
                 check_oled = 0;
             vTaskDelay(pdMS_TO_TICKS(200));
         }
-        if (((~dat) & 32) == 32)
+        if (check_oled)
         {
-            set_voice++;
-            if (set_voice == 4)
-                set_voice = 0;
-            vTaskDelay(pdMS_TO_TICKS(200));
+            switch (check_oled)
+            {
+            case 1:
+                if (((~dat) & 32) == 32)
+                {
+                    set_voice++;
+                    if (set_voice == 4)
+                        set_voice = 0;
+                    vTaskDelay(pdMS_TO_TICKS(200));
+                    break;
+                case 2:
+                    float ledmax[4] = {1, 1.25, 0, 0.5};
+                    if (((~dat) & 32) == 32)
+                    {
+                        int i = 0;
+                        set_led = ledmax[i];
+                        vTaskDelay(pdMS_TO_TICKS(200));
+                        i++;
+                        if (i == 4)
+                            i = 0;
+                        break;
+                    }
+                }
+                continue;
+            }
         }
         // 只有当按键状态发生变化时才处理
         if (check_led != 4)

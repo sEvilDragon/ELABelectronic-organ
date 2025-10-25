@@ -2,8 +2,8 @@
 
 extern int check_oled;
 extern int set_voice;
+extern float set_led;
 u8g2_t u8g2;
-spi_device_handle_t spi;
 static const char *TAG = "log_u8g2";
 
 void buzzer_mutex_write(int new_duty);
@@ -118,11 +118,44 @@ void OLED_menu(void)
     u8g2_DrawUTF8(&u8g2, 55, 40, display_buffer);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "菜单L");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "音乐B");
+    u8g2_DrawUTF8(&u8g2, 1, 63, "菜单B");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "音乐L");
 
     u8g2_SendBuffer(&u8g2);
     vTaskDelay(pdMS_TO_TICKS(50));
+}
+
+void caidan2(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 50, 15, "菜单");
+    u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
+    int led = set_led * 100;
+    switch (led)
+    {
+    case 100:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " ++ ");
+        buzzer_mutex_write(80);
+        break;
+    case 125:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " +++ ");
+        buzzer_mutex_write(2048);
+        break;
+    case 0:
+        u8g2_DrawUTF8(&u8g2, 64, 40, "  ");
+        buzzer_mutex_write(0);
+        break;
+    case 50:
+        u8g2_DrawUTF8(&u8g2, 64, 40, " + ");
+        buzzer_mutex_write(20);
+        break;
+    }
+
+    u8g2_SendBuffer(&u8g2);
 }
 
 void caidan1(void)
@@ -134,6 +167,7 @@ void caidan1(void)
     u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
     u8g2_DrawUTF8(&u8g2, 50, 15, "菜单");
     u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
+
     switch (set_voice)
     {
     case 0:
@@ -168,6 +202,9 @@ void vWordTask(void *pvParameters)
             break;
         case 1:
             caidan1();
+            break;
+        case 2:
+            caidan2();
             break;
         }
     }

@@ -21,6 +21,7 @@ TaskHandle_t xLedTaskHandle;
 int check_led = 0;
 int check_oled = 0;
 int set_voice = 1;
+float set_led = 1;
 static const char *TAG = "log_main";
 
 void vQueueProcessTask(void *pvParameters)

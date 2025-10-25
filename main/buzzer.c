@@ -83,7 +83,7 @@ void vBuzzerTask(void *pvParameters)
 
     while (1)
     {
-        if (check_oled == 1)
+        if (check_oled)
         {
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
