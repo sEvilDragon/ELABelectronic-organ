@@ -5,8 +5,11 @@ extern int check_led;
 extern int check_speed;
 extern int set_voice;
 extern float set_led;
+extern int time;
 extern float speed;
-u8g2_uint_t x = 64;
+int x = 64;
+int y = 128;
+int speedy = 3;
 u8g2_t u8g2;
 static const char *TAG = "log_u8g2";
 
@@ -122,8 +125,8 @@ void OLED_menu(void)
     u8g2_DrawUTF8(&u8g2, 55, 40, display_buffer);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "设定B");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "菜单L");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "设定B");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "菜单L");
 
     u8g2_SendBuffer(&u8g2);
 }
@@ -133,8 +136,8 @@ void caidan2(void)
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "向下A");
     u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "亮度：");
     int led = set_led * 100;
@@ -162,8 +165,8 @@ void caidan3(void)
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "向下A");
     u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "光种：");
     switch (check_led)
@@ -195,8 +198,8 @@ void caidan4(void)
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "向下A");
     u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "流光速：");
     switch (check_speed)
@@ -231,8 +234,8 @@ void caidan5(void)
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "向下A");
     u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
     u8g2_DrawUTF8(&u8g2, 32, 40, "播放音乐");
 
@@ -244,8 +247,8 @@ void caidan6(void)
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "向下A");
     u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
     u8g2_DrawUTF8(&u8g2, 32, 40, "一点感想");
 
@@ -254,17 +257,81 @@ void caidan6(void)
 
 void caidan7(void)
 {
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 62, "停止B");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "快进L");
+    switch (time)
+    {
+    case 1:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "     -音乐-     ");
+        break;
+    case 2:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "    --音乐--    ");
+        break;
+    case 3:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "   ---音乐---   ");
+        break;
+    case 4:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "  ----音乐----  ");
+        break;
+    case 5:
+        u8g2_DrawUTF8(&u8g2, 0, 15, " -----音乐----- ");
+        break;
+    case 6:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
+        break;
+    default:
+        break;
+    }
+    OLED_scroll_music();
 }
 
-void caidan6(void)
+void caidan8(void)
 {
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "继续B");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "结束L");
-    u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
-    u8g2_DrawUTF8(&u8g2, 32, 40, "音乐暂停");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "开始B");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "完事L");
+    switch (time)
+    {
+    case 1:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "     -音乐-     ");
+        break;
+    case 2:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "    --音乐--    ");
+        break;
+    case 3:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "   ---音乐---   ");
+        break;
+    case 4:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "  ----音乐----  ");
+        break;
+    case 5:
+        u8g2_DrawUTF8(&u8g2, 0, 15, " -----音乐----- ");
+        break;
+    case 6:
+        u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
+        break;
+    default:
+        break;
+    }
+    u8g2_DrawUTF8(&u8g2, 32, 40, "音乐停止");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan9(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 62, "快进B");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "完事L");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------感谢------");
+    OLED_scroll_word();
 
     u8g2_SendBuffer(&u8g2);
 }
@@ -274,8 +341,8 @@ void caidan1(void)
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
-    u8g2_DrawUTF8(&u8g2, 1, 63, "向上E");
-    u8g2_DrawUTF8(&u8g2, 85, 63, "向下A");
+    u8g2_DrawUTF8(&u8g2, 1, 62, "向上E");
+    u8g2_DrawUTF8(&u8g2, 85, 62, "向下A");
     u8g2_DrawUTF8(&u8g2, 0, 15, "------设定------");
     u8g2_DrawUTF8(&u8g2, 10, 40, "声音：");
 
@@ -335,6 +402,9 @@ void vWordTask(void *pvParameters)
         case 8:
             caidan8();
             break;
+        case 9:
+            caidan9();
+            break;
         default:
             break;
         }
@@ -342,11 +412,11 @@ void vWordTask(void *pvParameters)
     }
 }
 
-void OLED_scroll_text(void)
+void OLED_scroll_music(void)
 {
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
 
-    const char *text_to_scroll = "  正在播放《春日影》   ";
+    const char *text_to_scroll = "  正在播放<春日影> ";
     u8g2_uint_t text_width = u8g2_GetUTF8Width(&u8g2, text_to_scroll);
 
     u8g2_DrawUTF8(&u8g2, x, 40, text_to_scroll);
@@ -355,6 +425,24 @@ void OLED_scroll_text(void)
     x -= 2;
     if (x <= -text_width)
     {
-        x = 127;
+        x = 128;
+    }
+}
+
+void OLED_scroll_word(void)
+{
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+
+    const char *text_to_scroll = " First of all, I have to curse the u8g2 library. It's just too bad. There are so many characters missing. I went through so much trouble just to save some effort, but it ended up being even more troublesome! Anyway, these are all the functions I've achieved in the past four weeks. I'm very grateful for everyone's help and guidance. Of course, there are still many functions that haven't been realized. I hope I can make more progress in my future studies. Thank you! ";
+    u8g2_uint_t text_width = u8g2_GetUTF8Width(&u8g2, text_to_scroll);
+
+    u8g2_DrawUTF8(&u8g2, y, 40, text_to_scroll);
+
+    u8g2_SendBuffer(&u8g2);
+    y -= speedy;
+    if (y <= -text_width)
+    {
+        check_oled = 0;
+        return;
     }
 }

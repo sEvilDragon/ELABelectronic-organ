@@ -5,9 +5,12 @@ extern int check_oled;
 extern int check_speed;
 extern int set_voice;
 extern float set_led;
+extern int y;
+extern int speedy;
 extern QueueHandle_t xQueue;
 static uint16_t dat = 0;
 static const char *TAG = "log_ttp";
+void OLED_scroll_word(void);
 
 void ttp_start(void)
 {
@@ -101,6 +104,41 @@ unsigned short vReadttp229Task(void)
     return local_dat;
 }
 
+void thank(void)
+{
+    vTaskDelay(pdMS_TO_TICKS(500));
+    if (check_oled == 0)
+        return;
+    uint16_t panduan = vReadttp229Task();
+    uint16_t mew_dat = 0;
+    uint16_t datt;
+    while (1)
+    {
+        if (!panduan == 0)
+        {
+            mew_dat = vReadttp229Task();
+        }
+        else
+        {
+            datt = (~vReadttp229Task());
+            mew_dat = (datt);
+        }
+        if (((~mew_dat) & 32) == 32)
+        {
+            check_oled = 0;
+            return;
+        }
+        if (((~mew_dat) & 128) == 128)
+        {
+            speedy = 6;
+            vTaskDelay(pdMS_TO_TICKS(50));
+            speedy = 3;
+            continue;
+        }
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+}
+
 // 触摸板任务
 void vReadTask(void *pvParameters)
 {
@@ -144,16 +182,20 @@ void vReadTask(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
-        if ((check_oled == 7 || check_oled == 8) && ((~dat) & 32) == 32)
+        if (check_oled == 5 && ((~dat) & 128) == 128)
         {
-            if (check_oled == 7)
-                check_oled = 8;
-            else if (check_oled == 8)
-                check_oled = 7;
-            vTaskDelay(pdMS_TO_TICKS(200));
+            check_oled = 7;
+            music_start();
             continue;
         }
-        if (check_oled && check_oled >= 5 && ((~dat) & 16) == 16)
+        if (check_oled == 6 && ((~dat) & 128) == 128)
+        {
+            int y = 128;
+            check_oled = 9;
+            thank();
+            continue;
+        }
+        if (check_oled <= 6 && check_oled >= 5 && ((~dat) & 16) == 16)
         {
             check_oled++;
             if (check_oled == 7)
@@ -161,7 +203,7 @@ void vReadTask(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
-        if (check_oled && check_oled >= 5 && ((~dat) & 64) == 64)
+        if (check_oled <= 6 && check_oled >= 5 && ((~dat) & 64) == 64)
         {
             check_oled--;
             if (check_oled == 4)
@@ -188,7 +230,7 @@ void vReadTask(void *pvParameters)
         if (voice)
         {
             buzzer_set_tone(400);
-            vTaskDelay(pdMS_TO_TICKS(80));
+            vTaskDelay(pdMS_TO_TICKS(150));
             buzzer_set_tone(0);
             voice = 0;
         }

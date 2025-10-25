@@ -37,8 +37,10 @@ void letter_mutex_write(int tag, int value);
 int letter_mutex_get(int tag);
 
 void OLED_menu(void);
-void OLED_scroll_text(void);
 void vWordTask(void *pvParameters);
-void music_start(void)
+void music_start(void);
+
+void OLED_scroll_music(void);
+void OLED_scroll_word(void);
 
 #endif

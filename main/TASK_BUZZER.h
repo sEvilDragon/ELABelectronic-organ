@@ -31,4 +31,6 @@ void vBuzzerTask(void *pvParameters);
 void musictask(int message, int continue_time, int stop_time);
 void music_start(void);
 
+void OLED_scroll_text(void);
+
 #endif

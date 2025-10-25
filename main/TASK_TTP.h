@@ -24,4 +24,7 @@ unsigned short vReadttp229Task(void);
 void vReadTask(void *pvParameters);
 
 void buzzer_set_tone(int freq_hz);
+void musictask(int message, int continue_time, int stop_time);
+void music_start(void);
+
 #endif
