@@ -31,6 +31,8 @@ void musictask(int message, int continue_time, int stop_time)
     uint16_t datt;
     while (continue_time)
     {
+        if (check_oled == 0)
+            return;
         if (!panduan == 0)
         {
             mew_dat = vReadttp229Task();
@@ -82,6 +84,7 @@ void musictask(int message, int continue_time, int stop_time)
                 if (((~mew_dat) & 32) == 32)
                 {
                     vTaskDelay(pdMS_TO_TICKS(150));
+                    ttp_mutex_write(65535);
                     check_oled = 0;
                     break;
                 }
