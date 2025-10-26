@@ -142,6 +142,7 @@ void vMonitorTask(void *pvParameters)
 
 void app_main(void)
 {
+    vTaskDelay(pdMS_TO_TICKS(1000));
     // 各种初始化
     timer();
     buzzer_set_tone(0);
@@ -170,7 +171,7 @@ void app_main(void)
     bool success = true;
 
     // 初始化LED灯任务
-    ret = xTaskCreatePinnedToCore(led_animation_task, "ledanimation_task", 2048, NULL, 6, NULL, 1);
+    ret = xTaskCreatePinnedToCore(led_animation_task, "ledanimation_task", 2048, NULL, 5, NULL, 1);
     if (ret != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create ledanimation_task");
@@ -185,7 +186,7 @@ void app_main(void)
         success = false;
     }
 
-    ret = xTaskCreatePinnedToCore(vWordTask, "oled_task", 2048, NULL, 5, NULL, 0);
+    ret = xTaskCreatePinnedToCore(vWordTask, "oled_task", 2048, NULL, 4, NULL, 0);
     if (ret != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create oled_task");
@@ -200,7 +201,7 @@ void app_main(void)
         success = false;
     }
 
-    ret = xTaskCreatePinnedToCore(vQueueProcessTask, "queue_task", 2048, NULL, 3, NULL, 1);
+    ret = xTaskCreatePinnedToCore(vQueueProcessTask, "queue_task", 2048, NULL, 6, NULL, 1);
     if (ret != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create queue task");

@@ -42,9 +42,14 @@ void musictask(int message, int continue_time, int stop_time)
             datt = (~vReadttp229Task());
             mew_dat = (datt);
         }
+        if (((~mew_dat) & 65503) == 65503)
+        {
+            vTaskDelay(pdMS_TO_TICKS(50));
+            mew_dat = (~mew_dat);
+        }
         if (((~mew_dat) & 32) == 32)
         {
-            vTaskDelay(pdMS_TO_TICKS(20));
+            vTaskDelay(pdMS_TO_TICKS(50));
             return;
         }
         if (check_oled == 8 || ((~mew_dat) & 128) == 128)

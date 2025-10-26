@@ -116,11 +116,11 @@ void thank(void)
     {
         if (!panduan == 0)
         {
-            mew_dat = vReadttp229Task();
+            mew_dat = (uint16_t)vReadttp229Task();
         }
         else
         {
-            datt = (~vReadttp229Task());
+            datt = (uint16_t)(~vReadttp229Task());
             mew_dat = (datt);
         }
         if (((~mew_dat) & 32) == 32)
@@ -230,7 +230,7 @@ void vReadTask(void *pvParameters)
         if (voice)
         {
             buzzer_set_tone(400);
-            vTaskDelay(pdMS_TO_TICKS(150));
+            vTaskDelay(pdMS_TO_TICKS(500));
             buzzer_set_tone(0);
             voice = 0;
         }
