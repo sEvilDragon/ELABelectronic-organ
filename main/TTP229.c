@@ -83,17 +83,17 @@ unsigned short vReadttp229Task(void)
 
     /* 发起读序列：把 SDA 作为输出并产生启动脉冲，然后切回输入读取 */
     SDA_OUT();
-    gpio_set_level(TTP229_PIN_SDO, 1);
-    esp_rom_delay_us(100);
     gpio_set_level(TTP229_PIN_SDO, 0);
+    esp_rom_delay_us(100);
+    gpio_set_level(TTP229_PIN_SDO, 1);
     esp_rom_delay_us(100);
     SDA_IN();
 
     for (i = 0; i < NUM_TOUCH; i++)
     {
-        gpio_set_level(TTP229_PIN_SCL, 1);
-        esp_rom_delay_us(100);
         gpio_set_level(TTP229_PIN_SCL, 0);
+        esp_rom_delay_us(100);
+        gpio_set_level(TTP229_PIN_SCL, 1);
         esp_rom_delay_us(120);
         if (gpio_get_level(TTP229_PIN_SDO))
         {
