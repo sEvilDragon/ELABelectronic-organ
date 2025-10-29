@@ -23,10 +23,27 @@ Below is short explanation of remaining files in the project folder.
 
 ```
 ├── CMakeLists.txt
+├── components
+│   └── u8g2
+│       ├── inc
+│       ├── src
+│       ├── CMakeLists.txt
+│       └── component.mk
 ├── main
 │   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
+│   ├── electronic_organ_main.c
+│   ├── electronic_organ_main.h
+│   ├── led.c
+│   ├── music.c
+│   ├── TTP229.c
+│   ├── word.c
+│   ├── oled.c
+│   ├── buzzer.c
+│   ├── TASK_BUZZER.h
+│   ├── TASK_LED.h
+│   ├── TASK_OLED.h
+│   └── TASK_TTP.h
+└── README.md                  
 ```
 Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
 They are not used or needed when building with CMake and idf.py.
