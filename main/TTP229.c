@@ -227,13 +227,6 @@ void vReadTask(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
-        if (voice)
-        {
-            buzzer_set_tone(400);
-            vTaskDelay(pdMS_TO_TICKS(100));
-            buzzer_set_tone(0);
-            voice = 0;
-        }
         if ((((~dat) & 32) == 32) && (check_oled == 1))
         {
             set_voice++;

@@ -85,7 +85,13 @@ void vBuzzerTask(void *pvParameters)
     while (1)
     {
         if (voice)
-            continue;
+        {
+            vTaskDelay(pdMS_TO_TICKS(50));
+            buzzer_set_tone(400);
+            vTaskDelay(pdMS_TO_TICKS(200));
+            voice = 0;
+        }
+
         if ((check_oled > 0 && check_oled < 7) || check_oled > 7)
         {
             buzzer_set_tone(0);
