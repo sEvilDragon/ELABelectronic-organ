@@ -3,6 +3,7 @@
 extern int check_led;
 extern int check_oled;
 static int duty = 2048;
+extern int voice;
 static const char *TAG = "log_buzzer";
 
 // 为占空比变量写一个互斥锁
@@ -83,7 +84,8 @@ void vBuzzerTask(void *pvParameters)
 
     while (1)
     {
-
+        if (voice)
+            continue;
         if ((check_oled > 0 && check_oled < 7) || check_oled > 7)
         {
             buzzer_set_tone(0);

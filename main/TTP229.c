@@ -6,6 +6,7 @@ extern int check_speed;
 extern int set_voice;
 extern float set_led;
 extern int y;
+int voice = 0;
 extern int speedy;
 extern QueueHandle_t xQueue;
 static uint16_t dat = 0;
@@ -94,12 +95,12 @@ unsigned short vReadttp229Task(void)
         gpio_set_level(TTP229_PIN_SCL, 0);
         esp_rom_delay_us(100);
         gpio_set_level(TTP229_PIN_SCL, 1);
-        esp_rom_delay_us(120);
-        if (gpio_get_level(TTP229_PIN_SDO))
+        esp_rom_delay_us(100);
+        if (!gpio_get_level(TTP229_PIN_SDO))
         {
             local_dat |= (1 << i);
         }
-        esp_rom_delay_us(2);
+        esp_rom_delay_us(50);
     }
     return local_dat;
 }
@@ -146,7 +147,6 @@ void vReadTask(void *pvParameters)
     uint16_t last_dat = 0;
     uint16_t datt;
     uint16_t ledpanduan = 0;
-    int voice = 0;
     int panduan = vReadttp229Task();
     last_dat = vReadttp229Task();
     ttp_mutex_write(last_dat);
@@ -230,7 +230,7 @@ void vReadTask(void *pvParameters)
         if (voice)
         {
             buzzer_set_tone(400);
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(100));
             buzzer_set_tone(0);
             voice = 0;
         }
@@ -239,7 +239,7 @@ void vReadTask(void *pvParameters)
             set_voice++;
             if (set_voice == 4)
                 set_voice = 0;
-            voice++;
+            voice = 1;
             vTaskDelay(pdMS_TO_TICKS(150));
             continue;
         }
