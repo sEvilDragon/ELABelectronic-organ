@@ -159,8 +159,8 @@ void musicgame(int message, int continue_time, int stop_time)
                 }
                 if (((~mew_dat) & 128) == 128)
                 {
-                    vTaskDelay(pdMS_TO_TICKS(2000));
                     check_oled = 12;
+                    vTaskDelay(pdMS_TO_TICKS(2000));
                     break;
                 }
                 if (((~mew_dat) & 32) == 32)
