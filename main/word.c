@@ -369,6 +369,30 @@ void caidan1(void)
     u8g2_SendBuffer(&u8g2);
 }
 
+void caidan10(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 16, 32, "->播放音乐<-");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
+    u8g2_DrawUTF8(&u8g2, 32, 56, "开始音游");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan11(void)
+{
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 16, 56, "->开始音游<-");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
+    u8g2_DrawUTF8(&u8g2, 32, 32, "播放音乐");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
 void vWordTask(void *pvParameters)
 {
     while (1)
@@ -404,6 +428,12 @@ void vWordTask(void *pvParameters)
             break;
         case 9:
             caidan9();
+            break;
+        case 10:
+            caidan10();
+            break;
+        case 11:
+            caidan11();
             break;
         default:
             break;

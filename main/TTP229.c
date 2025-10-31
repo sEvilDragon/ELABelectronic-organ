@@ -7,6 +7,7 @@ extern int set_voice;
 extern float set_led;
 extern int y;
 int voice = 0;
+int panduan = 0;
 extern int speedy;
 extern QueueHandle_t xQueue;
 static uint16_t dat = 0;
@@ -147,7 +148,7 @@ void vReadTask(void *pvParameters)
     uint16_t last_dat = 0;
     uint16_t datt;
     uint16_t ledpanduan = 0;
-    int panduan = vReadttp229Task();
+    panduan = vReadttp229Task();
     last_dat = vReadttp229Task();
     ttp_mutex_write(last_dat);
     TickType_t last_time = xTaskGetTickCount();
@@ -173,7 +174,7 @@ void vReadTask(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
-        if ((check_oled == 0 || (check_oled >= 5 && check_oled <= 7)) && ((~dat) & 32) == 32)
+        if ((check_oled == 0 || (check_oled >= 5 && check_oled <= 6)) && ((~dat) & 32) == 32)
         {
             if (check_oled == 0)
                 check_oled = 5;
@@ -184,8 +185,23 @@ void vReadTask(void *pvParameters)
         }
         if (check_oled == 5 && ((~dat) & 128) == 128)
         {
+            check_oled = 10;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
+        }
+        if (check_oled == 10 && ((~dat) & 128) == 128)
+        {
             check_oled = 7;
             music_start();
+            continue;
+        }
+        if ((check_oled == 10 || check_oled == 11) && ((((~dat) & 16) == 16) || (((~dat) & 64) == 64)))
+        {
+            if (check_oled == 10)
+                check_oled = 11;
+            else
+                check_oled = 10;
+            vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
         if (check_oled == 6 && ((~dat) & 128) == 128)

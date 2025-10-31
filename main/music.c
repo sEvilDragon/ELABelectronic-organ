@@ -6,6 +6,8 @@
 extern u8g2_t u8g2;
 int time = 1;
 int speedm = 20;
+int yinfu = 0;
+extern int panduan;
 
 void ttp_mutex_write(uint16_t new_dat);
 unsigned short vReadttp229Task(void);
@@ -26,7 +28,6 @@ void musictask(int message, int continue_time, int stop_time)
         ESP_LOGW(TAG, "Queue full, message not sent");
     }
 
-    int panduan = vReadttp229Task();
     uint16_t mew_dat = 0;
     uint16_t datt;
     while (continue_time)
@@ -107,6 +108,75 @@ void musictask(int message, int continue_time, int stop_time)
     vTaskDelay(pdMS_TO_TICKS(stop_time));
 }
 
+void music_game(int message, int continue_time)
+{
+    if (check_oled == 0)
+        return;
+
+    vTaskDelay(pdMS_TO_TICKS(5));
+    message = (message & 0b1111111100001111);
+    if (xQueueSend(xQueue, &message, pdMS_TO_TICKS(100)) != pdPASS)
+    {
+        ESP_LOGW(TAG, "Queue full, message not sent");
+    }
+
+    uint16_t mew_dat = 0;
+    uint16_t datt;
+    while (continue_time)
+    {
+        if (check_oled == 0)
+            return;
+        if (!panduan == 0)
+        {
+            mew_dat = vReadttp229Task();
+        }
+        else
+        {
+            datt = (~vReadttp229Task());
+            mew_dat = (datt);
+        }
+        if (check_oled == 8 || ((~mew_dat) & 128) == 128)
+        {
+            check_oled = 8;
+            while (1)
+            {
+                vTaskDelay(pdMS_TO_TICKS(200));
+                if (!panduan == 0)
+                {
+                    mew_dat = vReadttp229Task();
+                }
+                else
+                {
+                    datt = (~vReadttp229Task());
+                    mew_dat = (datt);
+                }
+                if (((~mew_dat) & 128) == 128)
+                {
+                    vTaskDelay(pdMS_TO_TICKS(150));
+                    check_oled = 12;
+                    break;
+                }
+                if (((~mew_dat) & 32) == 32)
+                {
+                    vTaskDelay(pdMS_TO_TICKS(150));
+                    ttp_mutex_write(65535);
+                    check_oled = 0;
+                    break;
+                }
+            }
+        }
+        if (check_oled == 7)
+        {
+            continue_time -= 20;
+            if (continue_time <= 0)
+                break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+    ttp_mutex_write(65535);
+    vTaskDelay(pdMS_TO_TICKS(5));
+}
+
 // 神秘小曲的代码
 void music_start(void)
 {
@@ -125,7 +195,7 @@ void music_start(void)
     musictask(0b1000000000010000, 600, 10);
     musictask(0b0000000000010010, 300, 10);
     musictask(0b0000000000011000, 600, 10);
-    musictask(0b0000000000010010, 300, 10);
+    musictask(0b0000000000010010, 300, 10); // 3212
 
     musictask(0b1000000000010000, 450, 10);
     musictask(0b0100000000010000, 150, 10);
