@@ -7,6 +7,8 @@ extern int set_voice;
 extern float set_led;
 extern int time;
 extern float speed;
+extern long long int score;
+extern int ii;
 int x = 64;
 int y = 128;
 int speedy = 3;
@@ -17,6 +19,50 @@ void buzzer_mutex_write(int new_duty);
 
 // 设置一个数组用于在屏幕上显示大了上面字
 char letter[3] = {0};
+
+int yinfuu[] = {0, 3, 2, 1, 2,
+                3, 4, 3, 2,
+                3, 2, 1, 2,
+                3, 4, 3, 2,
+                3, 2, 1, 2,
+                3, 4, 3, 2,
+                3, 2, 1, 2,
+                3, 4, 3, 2, 1, 2,
+                3, 3, 2, 4, 3, 2,
+                2, 2, 1, 1, 4, 3, 2,
+                2, 1, 2, 3,
+                0, 3, 5, 1,
+                7, 1, 7, 1,
+                7, 6, 5, 5, 2, 4,
+                4, 3, 3, 5,
+                4, 3, 2, 3, 5,
+                1, 0, 1,
+                2, 1, 1, 1, 5, 1,
+                4, 3, 2, 1,
+                1, 0, 1, 2,
+                3, 3, 2, 4, 3, 2,
+                2, 2, 1, 1, 4, 3, 2,
+                2, 1, 2, 3,
+                0, 3, 5, 1,
+                7, 1, 7, 1,
+                7, 6, 5, 5, 2, 4,
+                4, 3, 3, 5,
+                4, 3, 2, 3, 5,
+                1, 0, 1, 1,
+                2, 1, 1, 5, 1,
+                4, 4, 4, 3, 2, 2, 1,
+                1, 0, 0,
+                6, 5, 5, 5, 4, 4,
+                3, 2, 2, 2, 0, 5,
+                4, 4, 4, 3, 2, 2, 1,
+                2, 1, 7, 1, 0,
+                6, 5, 5, 5, 4, 4,
+                3, 2, 2, 2, 0, 3,
+                3, 3, 3, 3, 3, 3, 2, 3,
+                2, 1, 1, 0, 1,
+                7, 6, 6,
+                0, 6, 6, 5, 4, 4,
+                4, 3, 4, 5, 5, 0, 0, 0};
 
 // 尝试创建一个互斥锁
 void letter_mutex_start(void)
@@ -375,7 +421,7 @@ void caidan10(void)
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 16, 32, "->播放音乐<-");
-    u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
     u8g2_DrawUTF8(&u8g2, 32, 56, "开始音游");
 
     u8g2_SendBuffer(&u8g2);
@@ -387,8 +433,101 @@ void caidan11(void)
 
     u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
     u8g2_DrawUTF8(&u8g2, 16, 56, "->开始音游<-");
-    u8g2_DrawUTF8(&u8g2, 0, 15, "------菜单------");
+    u8g2_DrawUTF8(&u8g2, 0, 15, "------音乐------");
     u8g2_DrawUTF8(&u8g2, 32, 32, "播放音乐");
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan12(void)
+{
+    char display_buffer[64]; // 临时缓冲区
+
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 62, "停下B");
+    if (score >= 0 && score < 1000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "加油!");
+    else if (score > 1000 && score < 5000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "GOOD!");
+    else if (score > 5000 && score < 10000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "强!");
+    else if (score > 10000 && score < 20000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "非人!");
+    else
+        u8g2_DrawUTF8(&u8g2, 80, 62, "神!!");
+
+    u8g2_SetFont(&u8g2, u8g2_font_helvR08_tf);
+    u8g2_DrawUTF8(&u8g2, 20, 8, "score:");
+
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%lld", score);
+    u8g2_DrawUTF8(&u8g2, 80, 8, display_buffer);
+
+    u8g2_SetFont(&u8g2, u8g2_font_helvR24_tf);
+
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%d", yinfuu[ii]);
+    u8g2_DrawUTF8(&u8g2, 55, 40, display_buffer);
+
+    u8g2_SetFont(&u8g2, u8g2_font_helvR14_tf);
+
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%d", yinfuu[ii + 2]);
+    u8g2_DrawUTF8(&u8g2, 104, 40, display_buffer);
+
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%d", yinfuu[ii + 1]);
+    u8g2_DrawUTF8(&u8g2, 82, 40, display_buffer);
+
+    u8g2_SendBuffer(&u8g2);
+}
+
+void caidan13(void)
+{
+    char display_buffer[64]; // 临时缓冲区
+
+    u8g2_ClearBuffer(&u8g2);
+
+    u8g2_SetFont(&u8g2, u8g2_font_unifont_t_chinese3);
+    u8g2_DrawUTF8(&u8g2, 1, 62, "停下B");
+
+    if (score >= 0 && score < 1000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "加油!");
+    else if (score > 1000 && score < 5000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "GOOD!");
+    else if (score > 5000 && score < 10000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "强!");
+    else if (score > 10000 && score < 20000)
+        u8g2_DrawUTF8(&u8g2, 80, 62, "非人!");
+    else
+        u8g2_DrawUTF8(&u8g2, 80, 62, "神!!");
+
+    u8g2_SetFont(&u8g2, u8g2_font_helvR08_tf);
+    u8g2_DrawUTF8(&u8g2, 35, 8, "GAME OVER!!");
+
+    u8g2_SetFont(&u8g2, u8g2_font_helvR14_tf);
+    snprintf(display_buffer, sizeof(display_buffer),
+             "%lld", score);
+    u8g2_DrawUTF8(&u8g2, 70, 36, display_buffer);
+
+    u8g2_SetFont(&u8g2, u8g2_font_helvR24_tf);
+
+    if (score < 1000)
+        u8g2_DrawUTF8(&u8g2, 10, 40, "E");
+    else if (score < 5000)
+        u8g2_DrawUTF8(&u8g2, 10, 40, "D");
+    else if (score < 10000)
+        u8g2_DrawUTF8(&u8g2, 10, 40, "C");
+    else if (score < 20000)
+        u8g2_DrawUTF8(&u8g2, 10, 40, "B");
+    else if (score < 30000)
+        u8g2_DrawUTF8(&u8g2, 10, 40, "A");
+    else if (score < 35000)
+        u8g2_DrawUTF8(&u8g2, 10, 40, "S");
+    else
+        u8g2_DrawUTF8(&u8g2, 10, 40, "S+");
 
     u8g2_SendBuffer(&u8g2);
 }
@@ -434,6 +573,12 @@ void vWordTask(void *pvParameters)
             break;
         case 11:
             caidan11();
+            break;
+        case 12:
+            caidan12();
+            break;
+        case 13:
+            caidan13();
             break;
         default:
             break;

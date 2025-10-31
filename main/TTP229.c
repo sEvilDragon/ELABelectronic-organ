@@ -13,6 +13,7 @@ extern QueueHandle_t xQueue;
 static uint16_t dat = 0;
 static const char *TAG = "log_ttp";
 void OLED_scroll_word(void);
+void music_game(void);
 
 void ttp_start(void)
 {
@@ -189,10 +190,22 @@ void vReadTask(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(200));
             continue;
         }
+        if (check_oled == 13 && ((~dat) & 128) == 128)
+        {
+            check_oled = 0;
+            vTaskDelay(pdMS_TO_TICKS(200));
+            continue;
+        }
         if (check_oled == 10 && ((~dat) & 128) == 128)
         {
             check_oled = 7;
             music_start();
+            continue;
+        }
+        if (check_oled == 11 && ((~dat) & 128) == 128)
+        {
+            check_oled = 12;
+            music_game();
             continue;
         }
         if ((check_oled == 10 || check_oled == 11) && ((((~dat) & 16) == 16) || (((~dat) & 64) == 64)))

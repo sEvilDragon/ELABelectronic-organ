@@ -33,4 +33,7 @@ void music_start(void);
 
 void OLED_scroll_text(void);
 
+void musicgame(int message, int continue_time, int stop_time);
+void music_game(void);
+
 #endif

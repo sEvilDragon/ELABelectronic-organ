@@ -91,13 +91,15 @@ void vBuzzerTask(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(200));
             voice = 0;
         }
-
+        if (check_oled == 12)
+            goto ther;
         if ((check_oled > 0 && check_oled < 7) || check_oled > 7)
         {
             buzzer_set_tone(0);
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
         }
+    ther:
         uint16_t dat = ttp_mutex_get();
         // 待办：AI将buzzer_set_tone(0);放到了后面，但之前放后面出现过问题
         int buzzer = 0;
