@@ -456,6 +456,7 @@ void music_start(void)
 void music_game(void)
 {
     ii = 0;
+    score = 0;
     vTaskDelay(pdMS_TO_TICKS(500));
     ii = 1;
     musicgame(0b1000000000010000, 600, 10);
